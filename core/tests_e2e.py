@@ -10,7 +10,6 @@ from .models import Restaurant, MenuItem
 
 class FoodOrderingE2ETests(APITestCase):
     def setUp(self):
-        print("\n--- E2E setUp ---")
         self.cust_data = {
             "username": "custX", "email": "cx@example.com", "password": "abc123",
             "is_customer": True, "is_restaurant": False
@@ -20,26 +19,21 @@ class FoodOrderingE2ETests(APITestCase):
             "is_customer": False, "is_restaurant": True
         }
         u1 = self.client.post(reverse('register'), self.cust_data)
-        print("REGISTER custX:", u1.status_code, u1.data)
         u2 = self.client.post(reverse('register'), self.resto_data)
-        print("REGISTER restY:", u2.status_code, u2.data)
 
         connection.close()
-        print("ALL USERS NOW:", list(User.objects.all().values()))
 
         self.assertTrue(User.objects.filter(username="custX").exists(), "User custX not found after register!")
         self.assertTrue(User.objects.filter(username="restY").exists(), "User restY not found after register!")
 
         # Customer login
         resp_cust = self.client.post(reverse('token_obtain_pair'), {"username": "custX", "password": "abc123"})
-        print("LOGIN custX:", resp_cust.status_code, resp_cust.data)
         self.assertEqual(resp_cust.status_code, 200, f"Customer login failed: {resp_cust.data}")
         self.assertIn("access", resp_cust.data, f"Customer login response: {resp_cust.data}")
         c_token = resp_cust.data["access"]
 
         # Resto login
         resp_resto = self.client.post(reverse('token_obtain_pair'), {"username": "restY", "password": "abc123"})
-        print("LOGIN restY:", resp_resto.status_code, resp_resto.data)
         self.assertEqual(resp_resto.status_code, 200, f"Restaurant login failed: {resp_resto.data}")
         self.assertIn("access", resp_resto.data, f"Restaurant login response: {resp_resto.data}")
         r_token = resp_resto.data["access"]
@@ -62,17 +56,14 @@ class FoodOrderingE2ETests(APITestCase):
             "is_customer": True, "is_restaurant": False
         }
         cust_reg = self.client.post(reg_url, cust_data)
-        print("REGISTER custE2E:", cust_reg.status_code, cust_reg.data)
         cust_id = cust_reg.data["id"]
 
         connection.close()
-        print("ALL USERS after custE2E register:", list(User.objects.all().values()))
         self.assertTrue(User.objects.filter(username="custE2E").exists(), "User custE2E not found after register!")
 
         login_cust = self.client.post(reverse('token_obtain_pair'), {
             "username": cust_data["username"], "password": cust_data["password"]
         })
-        print("LOGIN custE2E:", login_cust.status_code, login_cust.data)
         self.assertEqual(login_cust.status_code, 200, f"Customer login failed: {login_cust.data}")
         self.assertIn("access", login_cust.data, f"Customer login response: {login_cust.data}")
         cust_token = login_cust.data["access"]
@@ -109,7 +100,6 @@ class FoodOrderingE2ETests(APITestCase):
 
 class FoodOrderingE2EForbiddenTests(APITestCase):
     def setUp(self):
-        print("\n--- ForbiddenTests setUp ---")
         self.cust_data = {
             "username": "custX", "email": "cx@example.com", "password": "abc123",
             "is_customer": True, "is_restaurant": False
@@ -119,24 +109,19 @@ class FoodOrderingE2EForbiddenTests(APITestCase):
             "is_customer": False, "is_restaurant": True
         }
         u1 = self.client.post(reverse('register'), self.cust_data)
-        print("REGISTER custX:", u1.status_code, u1.data)
         u2 = self.client.post(reverse('register'), self.resto_data)
-        print("REGISTER restY:", u2.status_code, u2.data)
 
         connection.close()
-        print("ALL USERS NOW:", list(User.objects.all().values()))
 
         self.assertTrue(User.objects.filter(username="custX").exists(), "User custX not found after register!")
         self.assertTrue(User.objects.filter(username="restY").exists(), "User restY not found after register!")
 
         resp_cust = self.client.post(reverse('token_obtain_pair'), {"username": "custX", "password": "abc123"})
-        print("LOGIN custX:", resp_cust.status_code, resp_cust.data)
         self.assertEqual(resp_cust.status_code, 200, f"Customer login failed: {resp_cust.data}")
         self.assertIn("access", resp_cust.data, f"Customer login response: {resp_cust.data}")
         c_token = resp_cust.data["access"]
 
         resp_resto = self.client.post(reverse('token_obtain_pair'), {"username": "restY", "password": "abc123"})
-        print("LOGIN restY:", resp_resto.status_code, resp_resto.data)
         self.assertEqual(resp_resto.status_code, 200, f"Restaurant login failed: {resp_resto.data}")
         self.assertIn("access", resp_resto.data, f"Restaurant login response: {resp_resto.data}")
         r_token = resp_resto.data["access"]
@@ -163,13 +148,10 @@ class FoodOrderingE2EForbiddenTests(APITestCase):
             "username": "cust2", "email": "c2@example.com", "password": "abc123",
             "is_customer": True, "is_restaurant": False
         })
-        print("REGISTER cust2:", reg2.status_code, reg2.data)
         connection.close()
-        print("ALL USERS after cust2:", list(User.objects.all().values()))
         self.assertTrue(User.objects.filter(username="cust2").exists(), "User cust2 not found after register!")
 
         resp2 = self.client.post(reverse('token_obtain_pair'), {"username": "cust2", "password": "abc123"})
-        print("LOGIN cust2:", resp2.status_code, resp2.data)
         self.assertEqual(resp2.status_code, 200, f"Second customer login failed: {resp2.data}")
         self.assertIn("access", resp2.data, f"Second customer login response: {resp2.data}")
         tok2 = resp2.data["access"]

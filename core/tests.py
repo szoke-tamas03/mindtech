@@ -10,7 +10,7 @@ class JWTApiTests(APITestCase):
         self.customer_credentials = {
             "username": "customer1",
             "email": "cust1@test.hu",
-            "password": "valamititkos",
+            "password": "somethingsecure",
             "is_customer": True,
             "is_restaurant": False
         }
@@ -20,8 +20,8 @@ class JWTApiTests(APITestCase):
 
         self.restaurant_credentials = {
             "username": "restaurant1",
-            "email": "restaurant1@test.hu",
-            "password": "nagyonbiztos",
+            "email": "restaurant1@test.com",
+            "password": "verysecurepassword",
             "is_customer": False,
             "is_restaurant": True
         }
@@ -31,7 +31,7 @@ class JWTApiTests(APITestCase):
 
         self.customer2 = self.register_and_get_user({
             "username": "customer2",
-            "email": "cust2@test.hu",
+            "email": "cust2@test.com",
             "password": "pass2pass2",
             "is_customer": True,
             "is_restaurant": False
@@ -40,24 +40,24 @@ class JWTApiTests(APITestCase):
 
         self.restaurant2 = self.register_and_get_user({
             "username": "restaurant2",
-            "email": "restaurant2@test.hu",
-            "password": "masikpasss",
+            "email": "restaurant2@test.com",
+            "password": "anothersecurepass",
             "is_customer": False,
             "is_restaurant": True
         })
-        self.restaurant2_token = self.login_and_get_token("restaurant2", "masikpasss")
+        self.restaurant2_token = self.login_and_get_token("restaurant2", "anothersecurepass")
 
 
-        self.restaurant = Restaurant.objects.create(user=self.restaurant, name="test restaurant", description="Valami leiras")
-        self.menuitem1 = MenuItem.objects.create(restaurant=self.restaurant, name="Pizza", price=2200, description="Sonkás pizza")
-        self.menuitem2 = MenuItem.objects.create(restaurant=self.restaurant, name="soup", price=1000, description="Hússoup")
+        self.restaurant = Restaurant.objects.create(user=self.restaurant, name="test restaurant", description="description of test restaurant")
+        self.menuitem1 = MenuItem.objects.create(restaurant=self.restaurant, name="Pizza", price=2200, description="delicious pizza")
+        self.menuitem2 = MenuItem.objects.create(restaurant=self.restaurant, name="soup", price=1000, description="delicious soup")
 
-        self.restaurant2 = Restaurant.objects.create(user=self.restaurant2, name="other restaurant", description="other leiras")
-        self.menuitem3 = MenuItem.objects.create(restaurant=self.restaurant2, name="Sushi", price=3900, description="Makizushi")
+        self.restaurant2 = Restaurant.objects.create(user=self.restaurant2, name="other restaurant", description="description of other restaurant")
+        self.menuitem3 = MenuItem.objects.create(restaurant=self.restaurant2, name="Sushi", price=3900, description="delicious sushi")
 
 
         self.order = Order.objects.create(customer=self.customer, restaurant=self.restaurant, status='received')
-        self.orderitem = OrderItem.objects.create(order=self.order, menu_item=self.menuitem1, quantity=1, special_instructions="csípös")
+        self.orderitem = OrderItem.objects.create(order=self.order, menu_item=self.menuitem1, quantity=1, special_instructions="crispy")
 
     def get_auth_client(self, token):
         client = APIClient()
@@ -76,24 +76,24 @@ class JWTApiTests(APITestCase):
 
 
     def test_register_and_login_token(self):
-        data = {"username": "demo", "email": "demo@test.hu", "password": "titokos", "is_customer": True, "is_restaurant": False}
+        data = {"username": "demo", "email": "demo@test.com", "password": "secretpw", "is_customer": True, "is_restaurant": False}
         url = reverse("register")
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, 201)
-        login_resp = self.client.post(reverse("token_obtain_pair"), {"username":"demo","password":"titokos"})
+        login_resp = self.client.post(reverse("token_obtain_pair"), {"username":"demo","password":"secretpw"})
         self.assertEqual(login_resp.status_code, 200)
         self.assertIn("access", login_resp.data)
 
     def test_register_bad_role(self):
         reg_url = reverse("register")
-        data = {"username": "rossz", "email": "bad@something.com", "password": "abcdef", "is_customer": True, "is_restaurant": True}
+        data = {"username": "bad", "email": "bad@something.com", "password": "abcdef", "is_customer": True, "is_restaurant": True}
         resp = self.client.post(reg_url, data, format='json')
         self.assertEqual(resp.status_code, 400)
         self.assertIn("non_field_errors", resp.data)
 
     def test_login_bad_password(self):
         login_url = reverse("token_obtain_pair")
-        resp = self.client.post(login_url, {"username":"customer1", "password":"rossz"})
+        resp = self.client.post(login_url, {"username":"customer1", "password":"bad"})
         self.assertEqual(resp.status_code, 401)
         self.assertIn("No active account found", str(resp.data))
 
@@ -121,7 +121,7 @@ class JWTApiTests(APITestCase):
             "customerId": self.customer.id,
             "restaurantId": self.restaurant.id,
             "items": [
-                {"itemId": self.menuitem2.id, "quantity":2, "special_instructions": "sok borssal"}
+                {"itemId": self.menuitem2.id, "quantity":2, "special_instructions": "with extra cheese"}
             ]
         }
         resp = self.client.post(url, data, format='json')
@@ -182,7 +182,7 @@ class JWTApiTests(APITestCase):
         resp = client.patch(url, {"status": "preparing"}, format='json')
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.data["status"], "preparing")
-        resp2 = client.patch(url, {"status": "idegen"}, format='json')
+        resp2 = client.patch(url, {"status": "unknown"}, format='json')
         self.assertEqual(resp2.status_code, 400)
         client2 = self.get_auth_client(self.restaurant2_token)
         resp3 = client2.patch(url, {"status": "ready"}, format='json')

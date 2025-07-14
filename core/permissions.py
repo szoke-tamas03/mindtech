@@ -2,7 +2,7 @@ from rest_framework import permissions
 
 class IsRestaurantUser(permissions.BasePermission):
     """
-    Csak akkor enged, ha a felhasználó étterem (is_restaurant)
+    Only allow access to users who are authenticated and are restaurant owners.
     """
 
     def has_permission(self, request, view):

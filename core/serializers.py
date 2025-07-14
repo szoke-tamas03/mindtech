@@ -38,7 +38,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         if data["is_customer"] == data["is_restaurant"]:
-            raise serializers.ValidationError("Csak az egyik lehet igaz: is_customer vagy is_restaurant.")
+            raise serializers.ValidationError("Only one of is_customer or is_restaurant can be true.")
         return data
 
     def create(self, validated_data):

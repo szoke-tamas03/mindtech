@@ -90,12 +90,12 @@ class OrderCreateView(APIView):
         if not (customer_id and restaurant_id and items):
             return Response({"error": "Missing data."}, status=status.HTTP_400_BAD_REQUEST)
         if int(customer_id) != request.user.id:
-            return Response({"error": "Csak saját nevedben rendelhetsz!"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "You can only place an order as yourself!"}, status=status.HTTP_403_FORBIDDEN)
 
         try:
             restaurant = Restaurant.objects.get(id=restaurant_id)
         except Restaurant.DoesNotExist:
-            return Response({"error": "Nincs ilyen étterem."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "No restaurant found."}, status=status.HTTP_400_BAD_REQUEST)
 
         order = Order.objects.create(
             customer_id=customer_id,
@@ -165,9 +165,9 @@ class OrderDetailView(generics.RetrieveAPIView):
         obj = super().get_object()
         user = self.request.user
         if user.is_customer and obj.customer != user:
-            raise PermissionDenied("Csak a saját rendelésed láthatod.")
+            raise PermissionDenied("You can only view your own orders.")
         if user.is_restaurant and obj.restaurant.user != user:
-            raise PermissionDenied("Csak a saját éttermed rendeléseit láthatod.")
+            raise PermissionDenied("You can only view orders for your own restaurant.")
         return obj
 
 
@@ -200,7 +200,7 @@ class OrderStatusUpdateView(generics.UpdateAPIView):
         order = self.get_object()
         user = request.user
         if order.restaurant.user != user:
-            return Response({"error": "Csak a saját éttermed rendeléseit módosíthatod!"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "You can only modify your own orders!"}, status=status.HTTP_403_FORBIDDEN)
         new_status = request.data.get('status')
         if new_status not in ['received', 'preparing', 'ready', 'delivered']:
             return Response({"error": "Invalid status."}, status=status.HTTP_400_BAD_REQUEST)
