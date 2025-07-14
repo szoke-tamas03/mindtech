@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: foodorder
+      POSTGRES_USER: mindtech
+      POSTGRES_PASSWORD: mindtechpw
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    command: gunicorn food_ordering.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DEBUG: '1'
+      SECRET_KEY: changeme123
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: foodorder
+      DB_USER: mindtech
+      DB_PASSWORD: mindtechpw
+      DB_HOST: db
+      DB_PORT: 5432
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

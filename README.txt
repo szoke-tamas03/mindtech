@@ -157,4 +157,13 @@ python manage.py migrate
 python manage.py runserver
 # Register user → Login → Use API docs at /api/docs/
 
---------------------------------------------------------------------------------------------------------------------------------------------------------------																			
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+																			Docker
+
+I was not able to test this part. I am unable to install Docker on my Environment (I used company Laptop.)
+I added the necessary files (Dockerfile, docker-compose.yml)
+docker-compose build
+docker-compose up
+docker-compose run web python manage.py migrate
+docker-compose run web python manage.py createsuperuser
